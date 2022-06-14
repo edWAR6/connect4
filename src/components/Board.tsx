@@ -2,18 +2,21 @@ import React from "react";
 import cn from "classnames";
 import { connect } from "react-redux";
 import { RootState } from "../reducers";
-import { getBoard, getCurrentPlayer, getWinner } from "../reducers/selectors";
+import { getBoard, getCurrentPlayer, getWinner, getScore } from "../reducers/selectors";
 import { Row } from "./Row";
 import { dropCoin } from "../actions/dropCoin";
 import { startOver } from "../actions/startOver";
+import { addPoint } from "../actions/addPoint";
 import { Color } from "../types";
 
 interface Props {
   board: ReturnType<typeof getBoard>;
   color: ReturnType<typeof getCurrentPlayer>;
   winner: ReturnType<typeof getWinner>;
+  score: ReturnType<typeof getScore>;
   dropCoin: typeof dropCoin;
   startOver: typeof startOver;
+  addPoint: typeof addPoint;
 }
 
 export class BoardComponent extends React.Component<Props> {
@@ -60,6 +63,30 @@ export class BoardComponent extends React.Component<Props> {
     );
   };
 
+  displayScore = () => {
+    const {red, yellow} = this.props.score;
+    return (
+      <table>
+        <thead>
+          <tr>
+            <th>Red</th>
+            <th>Yellow</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span>{red} {red === 1 ? "win" : "wins"}</span>
+            </td>
+            <td>
+            <span>{yellow} {yellow === 1 ? "win" : "wins"}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    );
+  };
+
   render() {
     const boardClasses = cn("Game-Board");
 
@@ -71,17 +98,26 @@ export class BoardComponent extends React.Component<Props> {
           <div className={boardClasses}>{this.props.board.map(this.displayRow)}</div>
           <div>
             {this.displayButton()}
+            {this.displayScore()}
           </div>
         </div>
       </>
     );
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    const winner = this.props.winner;
+    if (winner && winner.color != prevProps.winner?.color) {
+      this.props.addPoint(winner.color)
+    }
   }
 }
 
 const mapState = (state: RootState) => ({
   board: getBoard(state),
   color: getCurrentPlayer(state),
-  winner: getWinner(state)
+  winner: getWinner(state),
+  score: getScore(state),
 });
 
-export const Board = connect(mapState, { dropCoin, startOver })(BoardComponent);
+export const Board = connect(mapState, { dropCoin, startOver, addPoint })(BoardComponent);

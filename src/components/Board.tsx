@@ -5,6 +5,7 @@ import { RootState } from "../reducers";
 import { getBoard, getCurrentPlayer, getWinner } from "../reducers/selectors";
 import { Row } from "./Row";
 import { dropCoin } from "../actions/dropCoin";
+import { startOver } from "../actions/startOver";
 import { Color } from "../types";
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
   color: ReturnType<typeof getCurrentPlayer>;
   winner: ReturnType<typeof getWinner>;
   dropCoin: typeof dropCoin;
+  startOver: typeof startOver;
 }
 
 export class BoardComponent extends React.Component<Props> {
@@ -21,6 +23,10 @@ export class BoardComponent extends React.Component<Props> {
       this.props.dropCoin(column, this.props.color);
     }
   };
+
+  startOver = () => {
+    this.props.startOver();
+  }
 
   displayHeader() {
     // only display the winner if there is one
@@ -43,15 +49,29 @@ export class BoardComponent extends React.Component<Props> {
     );
   };
 
+  displayButton = () => {
+    const buttonClasses = cn({
+      Button: true,
+      StartOver: !Boolean(this.props.winner),
+      PlayAgain: Boolean(this.props.winner),
+    });
+    return (
+      <input type="button" className={buttonClasses} value={this.props.winner ? "play again" : "start over"} onClick={this.startOver} />
+    );
+  };
+
   render() {
-    const classes = cn("Game-Board");
+    const boardClasses = cn("Game-Board");
 
     return (
       <>
         {this.displayHeader()}
 
         <div className="Game">
-          <div className={classes}>{this.props.board.map(this.displayRow)}</div>
+          <div className={boardClasses}>{this.props.board.map(this.displayRow)}</div>
+          <div>
+            {this.displayButton()}
+          </div>
         </div>
       </>
     );
@@ -64,4 +84,4 @@ const mapState = (state: RootState) => ({
   winner: getWinner(state)
 });
 
-export const Board = connect(mapState, { dropCoin })(BoardComponent);
+export const Board = connect(mapState, { dropCoin, startOver })(BoardComponent);
